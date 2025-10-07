@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LilGuy.Modules;
 
-public class MessageTransferModule(MessageTransferService _service, ILogger<MessageTransferModule> _logger)
+public class MessageTransferModule(MessageTransferService _service)
     : InteractionModuleBase<SocketInteractionContext>
 {
     [SlashCommand("channel-transfer",
