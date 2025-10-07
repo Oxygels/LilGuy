@@ -1,7 +1,5 @@
 using Discord;
 using Discord.Interactions;
-using Discord.Rest;
-using Discord.WebSocket;
 using LilGuy.Services;
 using Microsoft.Extensions.Logging;
 
@@ -19,16 +17,23 @@ public class MessageTransferModule(MessageTransferService _service, ILogger<Mess
         var destinationChannel = Context.Channel as ITextChannel;
 
         // For the source, we use the paramy
-        if (!ulong.TryParse(sourceChannelId, out ulong sourceChannelIdUlong))
+        if (!ulong.TryParse(sourceChannelId, out var sourceChannelIdUlong))
         {
             await RespondAsync("Invalid channel ID");
             return;
         }
+
         var sourceChannel = Context.Client.GetChannel(sourceChannelIdUlong);
 
         // We already set conditions on the channel types so the cast if safe
         var sourceTextChannel = sourceChannel as ITextChannel;
         var destinationTextChannel = destinationChannel;
+        if (sourceTextChannel is null || destinationTextChannel is null)
+        {
+            await RespondAsync("Channels must be text channels");
+            return;
+        }
+
         await RespondAsync($"Starting transfer from {sourceTextChannel.Name} to {destinationTextChannel.Name}");
         await _service.ChannelTransfer(sourceTextChannel, destinationTextChannel);
     }

@@ -11,7 +11,7 @@ public class MessageTransferService(ILogger<MessageTransferService> _logger)
     {
         _logger.LogInformation("Starting channel transfer");
         var messagesList = new List<IMessage>(MaxMessagesCount);
-        var requestOption = new RequestOptions()
+        var requestOption = new RequestOptions
         {
             RetryMode = RetryMode.RetryRatelimit, RatelimitCallback = OnRateLimit
         };
@@ -20,7 +20,7 @@ public class MessageTransferService(ILogger<MessageTransferService> _logger)
         var messages = await sourceChannel.GetMessagesAsync(MaxMessagesCount, options: requestOption).FlattenAsync();
         messagesList.AddRange(messages);
         int count;
-        
+
         // Then we get the oldest one and continue from there
         do
         {
@@ -50,10 +50,8 @@ public class MessageTransferService(ILogger<MessageTransferService> _logger)
             foreach (var message in chunk)
             {
                 foreach (var attachment in message.Attachments)
-                {
                     // Send the attachment url to prevent redownloading
                     await destinationChannel.SendMessageAsync(attachment.Url, options: requestOption);
-                }
 
                 // If the message is empty, sending timeouts
                 if (string.IsNullOrEmpty(message.Content)) continue;
@@ -65,10 +63,11 @@ public class MessageTransferService(ILogger<MessageTransferService> _logger)
         }
     }
 
-    private async Task OnRateLimit(IRateLimitInfo rateLimitInfo)
+    private Task OnRateLimit(IRateLimitInfo rateLimitInfo)
     {
         var toWait = rateLimitInfo.RetryAfter ?? 300;
         _logger.LogWarning("Reached rate limit for {Endpoint}, retrying after {Seconds}", rateLimitInfo.Endpoint,
             rateLimitInfo.RetryAfter);
+        return Task.CompletedTask;
     }
 }

@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -13,7 +12,8 @@ public class DiscordHostedService(
     ILogger<DiscordHostedService> _logger,
     IServiceProvider _serviceProvider) : BackgroundService
 {
-    private InteractionService _interactionService;
+    private readonly InteractionService _interactionService = new(_client.Rest);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _client.Log += ClientOnLog;
@@ -21,12 +21,8 @@ public class DiscordHostedService(
         _client.InteractionCreated += ClientOnInteractionCreated;
         var token = Environment.GetEnvironmentVariable("LILGUY_TOKEN");
         await _client.LoginAsync(TokenType.Bot, token);
-        _interactionService = new InteractionService(_client.Rest);
-        var moduleInfos =  await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _serviceProvider);
-        foreach (var module in moduleInfos)
-        {
-            _logger.LogWarning($"Adding module {module.Name}");
-        }
+        var moduleInfos = await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _serviceProvider);
+        foreach (var module in moduleInfos) _logger.LogWarning($"Adding module {module.Name}");
         await _client.StartAsync();
     }
 
