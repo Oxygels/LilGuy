@@ -9,7 +9,6 @@ public class MessageTransferService(ILogger<MessageTransferService> _logger)
 
     public async Task ChannelTransfer(ITextChannel sourceChannel, ITextChannel destinationChannel)
     {
-        _logger.LogInformation("Starting channel transfer");
         var messagesList = new List<IMessage>(MaxMessagesCount);
         var requestOption = new RequestOptions
         {
@@ -41,7 +40,6 @@ public class MessageTransferService(ILogger<MessageTransferService> _logger)
     private async Task SendMessages(ITextChannel destinationChannel, List<IMessage> messagesList,
         RequestOptions requestOption)
     {
-        _logger.LogInformation("Sending {count} messages", messagesList.Count);
         // Dont send more than 15 messages per second
         // Global rate limit is at 50 RPS for now
         var chunks = messagesList.Chunk(15);
